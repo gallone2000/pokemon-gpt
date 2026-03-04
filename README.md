@@ -17,6 +17,9 @@ Using Nix gives you:
 - **Fewer surprises across machines**: teammates on different laptops/OSes (and CI) get the same Python + libs, without “works on my machine” drift.
 - **No venv management**: no `pip install`, no `uv sync`, no `.venv` to keep in sync.
 
+> **Note about `pyproject.toml`:** it is kept **for informational/documentation purposes only**.
+> Dependency management for this project is driven by **`flake.nix` / `flake.lock`**.
+
 ---
 
 ## What’s inside
@@ -37,37 +40,51 @@ The application lives in `main.py` and exposes `app`, so Uvicorn runs it as:
 
 ## Requirements
 
-- **Nix** with flakes enabled
-- Optional: **Docker** (for container builds/runs)
-- Optional: **make** (to use the provided Makefile commands)
+- Optional (recommended): **Docker** + **make** (to use the provided Makefile commands)
+- Optional: **Nix** (only needed if you want to run the app directly without Docker)
 
 ---
 
-## Run locally (development)
+## Run locally (recommended: via Docker)
 
-Enter the Nix development shell:
+The simplest way to run locally is:
+
+```bash
+make start
+```
+
+Then open:
+
+- http://127.0.0.1:8000/ (docs: `/docs`, health: `/health`)
+
+Stop it with:
+
+```bash
+make stop
+```
+
+Health check:
+
+```bash
+make health
+```
+
+For the full list of targets and variables:
+
+```bash
+make help
+```
+
+---
+
+## Run locally (without Docker)
+
+If you prefer to run directly on your machine (no container), you can use Nix to get Python + deps:
 
 ```bash
 nix develop
-```
-
-Sanity check:
-
-```bash
-python -c "import fastapi, uvicorn; print('ok')"
-```
-
-Run the server:
-
-```bash
 python -m uvicorn main:app --reload
 ```
-
-Open:
-
-- http://127.0.0.1:8000/
-- http://127.0.0.1:8000/hello/Alice
-- http://127.0.0.1:8000/health
 
 ---
 
@@ -105,34 +122,12 @@ A typical pattern is:
 
 ---
 
-## Makefile commands
+## Makefile (common commands)
 
-A Makefile is included to simplify building and running the container.
-
-### Common workflow
-
-Build the image:
-
-```bash
-make build
-```
-
-Start the service:
+Start the service (builds the image first):
 
 ```bash
 make start
-```
-
-Follow logs:
-
-```bash
-make logs
-```
-
-Check health:
-
-```bash
-make health
 ```
 
 Stop the service:
@@ -141,51 +136,14 @@ Stop the service:
 make stop
 ```
 
-Remove containers:
+Health check:
 
 ```bash
-make down
+make health
 ```
 
-See status:
-
-```bash
-make status
-```
-
-Show all targets:
+Full list:
 
 ```bash
 make help
 ```
-
-### Variables
-
-You can override variables like this:
-
-```bash
-make start PORT=9000 HOST=0.0.0.0
-```
-
-Key vars:
-
-- `IMAGE` (default: app name)
-- `CONTAINER` (default: app name)
-- `PORT` (default: 8000)
-- `HOST` (default: 127.0.0.1)
-
-### Docker Compose autodetect
-
-If `compose.yml` or `docker-compose.yml` exists, `make start/stop/logs/...` will use `docker compose`.
-Otherwise it falls back to `docker run`.
-
-### Debug shell
-
-Because distroless images do not include a shell, the Makefile provides:
-
-```bash
-make shell
-```
-
-This opens a `nixos/nix` container with your repo mounted at `/app` for debugging.
-
